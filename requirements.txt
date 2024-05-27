@@ -1,0 +1,6 @@
+transformers==4.33
+datasets
+sacremoses
+sacrebleu
+sentencepiece
+pandas
