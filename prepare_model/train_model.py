@@ -48,7 +48,7 @@ def train(model: AutoModelForSeq2SeqLM, df_train: pd.DataFrame, tokenizer: NllbT
 
     LANGS = [("pl", "pl_Latn"), ("csb", "csb_Latn")]
 
-    print(get_random_language_pairs(1, LANGS, df_train))
+    # print(get_random_language_pairs(1, LANGS, df_train))
 
     MODEL_SAVE_PATH = "pl-csb-translator"
 
@@ -58,7 +58,7 @@ def train(model: AutoModelForSeq2SeqLM, df_train: pd.DataFrame, tokenizer: NllbT
 
     tq = trange(len(losses), training_steps)
     for i in tq:
-        xx, yy, lang1, lang2 = get_random_language_pairs(batch_size)
+        xx, yy, lang1, lang2 = get_random_language_pairs(batch_size, LANGS, df_train)
         try:
             tokenizer.src_lang = lang1
             x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=max_length).to(model.device)

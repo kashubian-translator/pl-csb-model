@@ -30,4 +30,4 @@ def main() -> None:
 
     model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 
-    train_model.train(model, dataset, tokenizer)
+    train_model.train(model, trans_df, tokenizer)

@@ -4,3 +4,4 @@ sacremoses
 sacrebleu
 sentencepiece
 pandas
+torch
