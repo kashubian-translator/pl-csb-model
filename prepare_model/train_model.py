@@ -13,6 +13,9 @@ def cleanup():
     gc.collect()
     torch.cuda.empty_cache()
 
+# TODO: this function should most likely take in the .tsv dataset as an argument and not tokens/words
+# please refer to https://colab.research.google.com/drive/1bayEaw2fz_9Mhg9jFFZhrmDlQlBj1YZf?usp=sharing#scrollTo=5ssJCguZ-3oH
+# you can see how the .tsv is loaded in prepare_data.py
 def get_random_language_pairs(batch_size, langs, data):
     (l1, long1), (l2, long2) = random.sample(langs, 2)
     xx, yy = [], []
