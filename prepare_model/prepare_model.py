@@ -1,8 +1,8 @@
 import pandas as pd
-from transformers import NllbTokenizer
-from transformers.models.nllb.tokenization_nllb import FAIRSEQ_LANGUAGE_CODES
-from tqdm.auto import tqdm, trange
+from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 import re
+
+import train_model
 
 MODEL_NAME = "facebook/nllb-200-distilled-600M"
 
@@ -20,25 +20,14 @@ def prepare_translation_dataset(trans_df: pd.DataFrame, tokenizer: NllbTokenizer
 
     return dataset
 
-def get_updated_tokenizer() -> NllbTokenizer:
-    tokenizer = tokenizer = NllbTokenizer.from_pretrained(MODEL_NAME, additional_special_tokens=["csb_Latn"])
-
-    print(tokenizer.added_tokens_encoder)
-
-    #Setting this makes the tokenizer automatically pre-pend tokenised text with the given language code.
-    # tokenizer.src_lang = 'csb_Latn'
-
-    #This should display the given text, pre-pended with the language code.
-    # print(tokenizer.decode(tokenizer("Domëszlnô farwa").input_ids))
-    return tokenizer
-    
-
 def main() -> None:
     data_path = "../pl-csb-data/data/train.tsv"
     trans_df = pd.read_csv(data_path, sep="\t")
 
-    tokenizer = get_updated_tokenizer()
-
-    model = NllbTokenizer.from_pretrained(MODEL_NAME)
+    tokenizer = NllbTokenizer.from_pretrained(MODEL_NAME, additional_special_tokens=["csb_Latn"])
 
     dataset = prepare_translation_dataset(trans_df, tokenizer)
+
+    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+
+    train_model.train(model, dataset, tokenizer)
