@@ -46,7 +46,7 @@ def train(model: AutoModelForSeq2SeqLM, df_train: pd.DataFrame, tokenizer: NllbT
     losses = []
     scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps)
 
-    LANGS = [("pl", "pl_Latn"), ("csb", "csb_Latn")]
+    LANGS = [("pl", "pol_Latn"), ("csb", "csb_Latn")]
 
     # print(get_random_language_pairs(1, LANGS, df_train))
 

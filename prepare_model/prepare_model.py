@@ -25,6 +25,8 @@ def main() -> None:
     trans_df = pd.read_csv(data_path, sep="\t")
 
     tokenizer = NllbTokenizer.from_pretrained(MODEL_NAME, additional_special_tokens=["csb_Latn"])
+    tokenizer.lang_code_to_id["csb_Latn"] = len(tokenizer.lang_code_to_id)
+    tokenizer.id_to_lang_code[tokenizer.lang_code_to_id["csb_Latn"]] = "csb_Latn"
 
     dataset = prepare_translation_dataset(trans_df, tokenizer)
 
