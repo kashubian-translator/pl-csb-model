@@ -45,8 +45,6 @@ def train(model: AutoModelForSeq2SeqLM, df_train: pd.DataFrame, tokenizer: NllbT
 
     LANGS = [("pl", "pol_Latn"), ("csb", "csb_Latn")]
 
-    # print(get_random_language_pairs(1, LANGS, df_train))
-
     MODEL_SAVE_PATH = "pl-csb-translator"
 
     model.train()
