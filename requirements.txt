@@ -1,7 +1,7 @@
-transformers=4.41
-datasets
-sacremoses
-sacrebleu
-sentencepiece
-pandas
-torch
+datasets==2.18.0
+pandas==2.1.4
+sacrebleu==2.4.1
+sacremoses==0.1.1
+sentencepiece==0.2.0
+torch==2.2.2
+transformers==4.41.0
