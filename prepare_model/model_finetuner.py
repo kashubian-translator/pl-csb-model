@@ -22,7 +22,7 @@ def get_random_language_pairs(batch_size, langs, data):
         yy.append(item[l2])
     return xx, yy, long1, long2
 
-def train(model: AutoModelForSeq2SeqLM, df_train: pd.DataFrame, tokenizer: NllbTokenizer) -> None:
+def finetune(model: AutoModelForSeq2SeqLM, df_train: pd.DataFrame, tokenizer: NllbTokenizer) -> None:
     if torch.cuda.is_available():
         model.cuda()
 
