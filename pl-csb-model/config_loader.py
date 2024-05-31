@@ -2,5 +2,5 @@ import configparser
 
 def load() -> dict:
     config = configparser.ConfigParser()
-    config.read("config.ini")
+    config.read("pl-csb-model/config.ini")
     return config

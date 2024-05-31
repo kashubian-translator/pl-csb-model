@@ -26,7 +26,7 @@ def get_random_language_pairs(batch_size, langs, data):
 
 def train(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, optimizer: Adafactor, config: ConfigParser) -> None:
     losses = []
-    scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=config["TRAINING"]["WarmupSteps"])
+    scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=int(config["TRAINING"]["WarmupSteps"]))
 
     LANGS = [("pl", "pol_Latn"), ("csb", "csb_Latn")]
 
@@ -34,14 +34,14 @@ def train(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbToken
     x, y, loss = None, None, None
     cleanup()
 
-    tq = trange(len(losses), config["TRAINING"]["TrainingSteps"])
+    tq = trange(len(losses), int(config["TRAINING"]["TrainingSteps"]))
     for i in tq:
-        xx, yy, lang1, lang2 = get_random_language_pairs(config["TRAINING"]["BatchSize"], LANGS, data)
+        xx, yy, lang1, lang2 = get_random_language_pairs(int(config["TRAINING"]["BatchSize"]), LANGS, data)
         try:
             tokenizer.src_lang = lang1
-            x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=config["TRAINING"]["MaxLength"]).to(model.device)
+            x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=int(config["TRAINING"]["MaxLength"])).to(model.device)
             tokenizer.src_lang = lang2
-            y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=config["TRAINING"]["MaxLength"]).to(model.device)
+            y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=int(config["TRAINING"]["MaxLength"])).to(model.device)
             y.input_ids[y.input_ids == tokenizer.pad_token_id] = -100
 
             loss = model(**x, labels=y.input_ids).loss
