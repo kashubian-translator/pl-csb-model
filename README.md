@@ -1,4 +1,7 @@
 # Setup
 `pip install -r requirements.txt`
-# Create Model
+# Model Creation
 `python pl-csb-model`
+# Configuration
+
+Pretrained model, output model name as well as training settings can be all configured inside `config.ini` file.

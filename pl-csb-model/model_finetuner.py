@@ -1,8 +1,10 @@
 import gc
 import random
+from configparser import ConfigParser
+
 import torch
-import pandas as pd
 import numpy as np
+import pandas as pd
 from tqdm.auto import tqdm, trange
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 from transformers.optimization import Adafactor
@@ -22,43 +24,24 @@ def get_random_language_pairs(batch_size, langs, data):
         yy.append(item[l2])
     return xx, yy, long1, long2
 
-def finetune(model: AutoModelForSeq2SeqLM, df_train: pd.DataFrame, tokenizer: NllbTokenizer) -> None:
-    if torch.cuda.is_available():
-        model.cuda()
-
-    optimizer = Adafactor(
-        [p for p in model.parameters() if p.requires_grad],
-        scale_parameter=False,
-        relative_step=False,
-        lr=1e-4,
-        clip_threshold=1.0,
-        weight_decay=1e-3,
-    )
-
-    batch_size = 16
-    max_length = 128
-    warmup_steps = 1_000
-    training_steps = 57000
-
+def train(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, optimizer: Adafactor, config: ConfigParser) -> None:
     losses = []
-    scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps)
+    scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=config["TRAINING"]["WarmupSteps"])
 
     LANGS = [("pl", "pol_Latn"), ("csb", "csb_Latn")]
-
-    MODEL_SAVE_PATH = "pl-csb-translator"
 
     model.train()
     x, y, loss = None, None, None
     cleanup()
 
-    tq = trange(len(losses), training_steps)
+    tq = trange(len(losses), config["TRAINING"]["TrainingSteps"])
     for i in tq:
-        xx, yy, lang1, lang2 = get_random_language_pairs(batch_size, LANGS, df_train)
+        xx, yy, lang1, lang2 = get_random_language_pairs(config["TRAINING"]["BatchSize"], LANGS, data)
         try:
             tokenizer.src_lang = lang1
-            x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=max_length).to(model.device)
+            x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=config["TRAINING"]["MaxLength"]).to(model.device)
             tokenizer.src_lang = lang2
-            y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=max_length).to(model.device)
+            y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=config["TRAINING"]["MaxLength"]).to(model.device)
             y.input_ids[y.input_ids == tokenizer.pad_token_id] = -100
 
             loss = model(**x, labels=y.input_ids).loss
@@ -80,6 +63,21 @@ def finetune(model: AutoModelForSeq2SeqLM, df_train: pd.DataFrame, tokenizer: Nl
             print(i, np.mean(losses[-1000:]))
 
         if i % 1000 == 0 and i > 0:
-            model.save_pretrained(MODEL_SAVE_PATH)
-            tokenizer.save_pretrained(MODEL_SAVE_PATH)
+            model.save_pretrained(config["MODEL"]["MODEL_SAVE_PATH"])
+            tokenizer.save_pretrained(config["MODEL"]["MODEL_SAVE_PATH"])
+
+def finetune(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, config: ConfigParser) -> None:
+    if torch.cuda.is_available():
+        model.cuda()
+
+    optimizer = Adafactor(
+        [p for p in model.parameters() if p.requires_grad],
+        scale_parameter=False,
+        relative_step=False,
+        lr=1e-4,
+        clip_threshold=1.0,
+        weight_decay=1e-3,
+    )
+
+    train(model, data, tokenizer, optimizer, config)
     

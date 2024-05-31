@@ -5,10 +5,10 @@ import data_loader
 import model_finetuner
 
 if __name__ == "__main__":
-    default_config = config_loader.load_default()
+    config = config_loader.load()
 
-    pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(default_config["PretrainedModelName"])
+    pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(config["MODEL"]["PretrainedModelName"])
     train_data = data_loader.load_train()
-    tokenizer = NllbTokenizer.from_pretrained(default_config["PretrainedModelName"], additional_special_tokens=["csb_Latn"])
+    tokenizer = NllbTokenizer.from_pretrained(config["MODEL"]["PretrainedModelName"], additional_special_tokens=["csb_Latn"])
 
-    model_finetuner.finetune(pretrained_model, train_data, tokenizer)
+    model_finetuner.finetune(pretrained_model, train_data, tokenizer, config)
