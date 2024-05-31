@@ -35,7 +35,7 @@ def train(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbToken
     cleanup()
 
     tq = trange(len(losses), int(config["TRAINING"]["TrainingSteps"]))
-    for i in tq:
+    for _ in tq:
         xx, yy, lang1, lang2 = get_random_language_pairs(int(config["TRAINING"]["BatchSize"]), LANGS, data)
         try:
             tokenizer.src_lang = lang1
@@ -59,12 +59,8 @@ def train(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbToken
             print('error', max(len(s) for s in xx + yy), e)
             continue
 
-        if i % 1000 == 0:
-            print(i, np.mean(losses[-1000:]))
-
-        if i % 1000 == 0 and i > 0:
-            model.save_pretrained(config["MODEL"]["MODEL_SAVE_PATH"])
-            tokenizer.save_pretrained(config["MODEL"]["MODEL_SAVE_PATH"])
+    model.save_pretrained(config["MODEL"]["OutputModelName"])
+    tokenizer.save_pretrained(config["MODEL"]["OutputModelName"])
 
 def finetune(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, config: ConfigParser) -> None:
     if torch.cuda.is_available():
