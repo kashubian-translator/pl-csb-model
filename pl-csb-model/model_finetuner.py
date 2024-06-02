@@ -65,7 +65,7 @@ def train(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbToken
 def finetune(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, config: ConfigParser) -> None:
     if torch.cuda.is_available():
         model.cuda()
-
+    
     optimizer = Adafactor(
         [p for p in model.parameters() if p.requires_grad],
         scale_parameter=False,
