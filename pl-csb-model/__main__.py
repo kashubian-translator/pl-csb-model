@@ -7,7 +7,7 @@ import translate.translator as translator
 
 import argparse
 
-def train_model(config: dict):
+def train_model(config: dict) -> None:
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(config["MODEL"]["PretrainedModelName"])
     train_data = data_loader.load_train()
     tokenizer = NllbTokenizer.from_pretrained(config["MODEL"]["PretrainedModelName"], additional_special_tokens=["csb_Latn"])
