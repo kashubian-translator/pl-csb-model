@@ -1,6 +1,6 @@
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
-def translate(text: str, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, src_lang='pol_Latn', tgt_lang='csb_Latn', a=32, b=3, max_input_length=1024, num_beams=4, **kwargs):
+def translate(text: str, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, src_lang='pol_Latn', tgt_lang='csb_Latn', a=32, b=3, max_input_length=1024, num_beams=4, **kwargs) -> list[str]:
     tokenizer.src_lang = src_lang
     tokenizer.tgt_lang = tgt_lang
     inputs = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=max_input_length)

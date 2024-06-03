@@ -1,11 +1,10 @@
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
+import argparse
 
 import config_loader
 import train.data_loader as data_loader
 import train.model_finetuner as model_finetuner
 import translate.translator as translator
-
-import argparse
 
 def train_model(config: dict) -> None:
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(config["MODEL"]["PretrainedModelName"])
@@ -18,7 +17,7 @@ def use_model(config: dict) -> None:
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(config["MODEL"]["OutputModelName"])
     tokenizer = NllbTokenizer.from_pretrained(config["MODEL"]["OutputModelName"])
     message="Wsiądźmy do tego autobusu"
-    translated_message=translator.translate(, pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn')
+    translated_message=translator.translate(message, pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn')
     print(f"Message {message} has been translated to: {translated_message}")
 
 if __name__ == "__main__":

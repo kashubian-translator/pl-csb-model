@@ -1,7 +1,5 @@
 import gc
 import random
-from configparser import ConfigParser
-
 import torch
 import pandas as pd
 from tqdm.auto import trange
@@ -9,7 +7,9 @@ from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 from transformers.optimization import Adafactor
 from transformers import get_constant_schedule_with_warmup
 
-def cleanup():
+from configparser import ConfigParser
+
+def cleanup() -> None:
     """Try to free GPU memory"""
     gc.collect()
     torch.cuda.empty_cache()
