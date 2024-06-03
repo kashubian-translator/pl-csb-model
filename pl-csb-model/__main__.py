@@ -14,7 +14,7 @@ def train_model(config: dict) -> None:
 
     model_finetuner.finetune(pretrained_model, train_data, tokenizer, config)
     
-def use_model(config: dict):
+def use_model(config: dict) -> None:
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(config["MODEL"]["OutputModelName"])
     tokenizer = NllbTokenizer.from_pretrained(config["MODEL"]["OutputModelName"])
     print(translator.translate('Wsiądźmy do tego autobusu', pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn'))
