@@ -2,7 +2,7 @@
 `pip install -r requirements.txt`
 # Model Creation
 `python pl-csb-model train`
-# Translation using the created model
+# Translation Using the Created Model
 `python pl-csb-model translate`
 # Configuration
 
