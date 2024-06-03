@@ -1,9 +1,9 @@
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
 import config_loader
-import data_loader
-import model_finetuner
-import translator
+import train.data_loader as data_loader
+import train.model_finetuner as model_finetuner
+import translate.translator as translator
 
 import argparse
 

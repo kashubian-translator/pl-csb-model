@@ -3,9 +3,8 @@ import random
 from configparser import ConfigParser
 
 import torch
-import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm, trange
+from tqdm.auto import trange
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 from transformers.optimization import Adafactor
 from transformers import get_constant_schedule_with_warmup
