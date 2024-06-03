@@ -21,7 +21,7 @@ def use_model(config: dict) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["train", "translate"], help="Mode to run the application")
+    parser.add_argument("mode", choices=["train", "translate"], help="Mode to run the application with")
     
     args = parser.parse_args()
     
