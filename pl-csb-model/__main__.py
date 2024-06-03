@@ -17,7 +17,9 @@ def train_model(config: dict) -> None:
 def use_model(config: dict) -> None:
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(config["MODEL"]["OutputModelName"])
     tokenizer = NllbTokenizer.from_pretrained(config["MODEL"]["OutputModelName"])
-    print(translator.translate('Wsiądźmy do tego autobusu', pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn'))
+    message="Wsiądźmy do tego autobusu"
+    translated_message=translator.translate(, pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn')
+    print(f"Message {message} has been translated to: {translated_message}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
