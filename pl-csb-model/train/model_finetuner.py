@@ -1,16 +1,15 @@
 import gc
 import random
-from configparser import ConfigParser
-
 import torch
-import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm, trange
+from tqdm.auto import trange
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 from transformers.optimization import Adafactor
 from transformers import get_constant_schedule_with_warmup
 
-def cleanup():
+from configparser import ConfigParser
+
+def cleanup() -> None:
     """Try to free GPU memory"""
     gc.collect()
     torch.cuda.empty_cache()
@@ -65,7 +64,7 @@ def train(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbToken
 def finetune(model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, config: ConfigParser) -> None:
     if torch.cuda.is_available():
         model.cuda()
-
+    
     optimizer = Adafactor(
         [p for p in model.parameters() if p.requires_grad],
         scale_parameter=False,
