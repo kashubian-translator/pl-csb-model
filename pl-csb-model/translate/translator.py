@@ -1,4 +1,11 @@
+import re
+
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
+
+def normalize_translation(input: list[str]) -> str:
+    # Technically matching against 'Latn' will break if we do languages other than PL and CSB but we won't
+    return re.match(r'^.*Latn (.*)<.*$', input[0]).group(1)
+
 
 def translate(text: str, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, src_lang='pol_Latn', tgt_lang='csb_Latn', a=32, b=3, max_input_length=1024, num_beams=4, **kwargs) -> list[str]:
     tokenizer.src_lang = src_lang
