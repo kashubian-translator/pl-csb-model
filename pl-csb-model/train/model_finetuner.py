@@ -29,7 +29,7 @@ def train(model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataF
     losses = []
     scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=int(train_conf["warmup_steps"]))
 
-    LANGS = [("pl", "pol_Latn"), ("csb", "csb_Latn")]
+    LANGS = [("pol_Latn", "pol_Latn"), ("csb_Latn", "csb_Latn")]
 
     model.train()
     x, y, loss = None, None, None
@@ -40,7 +40,10 @@ def train(model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataF
         xx, yy, lang1, lang2 = get_random_language_pairs(int(train_conf["batch_size"]), LANGS, data)
         try:
             tokenizer.src_lang = lang1
-            x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
+            try:
+                x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
+            except ValueError:
+                print(xx, "\n", yy, "\n")
             tokenizer.src_lang = lang2
             y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
             y.input_ids[y.input_ids == tokenizer.pad_token_id] = -100
