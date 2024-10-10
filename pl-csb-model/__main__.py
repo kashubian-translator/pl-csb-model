@@ -5,8 +5,10 @@ from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 import config_loader
 import evaluate.model_evaluator as model_evaluator
 import train.data_loader as data_loader
-import train.model_finetuner as model_finetuner
+from train.logger import set_up_logger
+from train.model_finetuner import ModelFinetuner
 import translate.translator as translator
+
 
 def train_model(config: dict) -> None:
     pretrained_model_name = config["MODEL"]["pretrained_model_name"]
@@ -15,7 +17,8 @@ def train_model(config: dict) -> None:
     tokenizer = NllbTokenizer.from_pretrained(pretrained_model_name, additional_special_tokens=["csb_Latn"])
     train_data = data_loader.load_data(config["DATA"]["training_data_file"])
 
-    model_finetuner.finetune(pretrained_model, tokenizer, train_data, config)
+    logger = set_up_logger()
+    ModelFinetuner(logger).finetune(pretrained_model, tokenizer, train_data, config)
     
 def use_model(config: dict) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
