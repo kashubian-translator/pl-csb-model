@@ -22,13 +22,20 @@ class ModelFinetuner:
         torch.cuda.empty_cache()
 
     def get_random_language_pairs(self, batch_size, langs, data):
-        (l1, long1), (l2, long2) = random.sample(langs, 2)
-        xx, yy = [], []
-        for _ in range(batch_size):
-            item = data.iloc[random.randint(0, len(data)-1)]
-            xx.append(item[l1])
-            yy.append(item[l2])
-        return xx, yy, long1, long2
+        try:
+            (l1, long1), (l2, long2) = random.sample(langs, 2)
+            xx, yy = [], []
+            for _ in range(batch_size):
+                item = data.iloc[random.randint(0, len(data)-1)]
+                xx.append(item[l1])
+                yy.append(item[l2])
+            return xx, yy, long1, long2
+        except KeyError as e:
+            self.__logger.error("Error: language not found in data, exception: %s", str(e))
+            raise
+        except Exception as e:
+            self.__logger.error("Error: unexpected exception in get_random_language_pairs, exception: %s", str(e))
+            raise
 
     def train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataFrame, optimizer: Adafactor, config: ConfigParser) -> None:
         train_conf = config["TRAINING"]
@@ -60,16 +67,20 @@ class ModelFinetuner:
                 optimizer.zero_grad(set_to_none=True)
                 scheduler.step()
 
-            except RuntimeError as e:
+            except Exception as e:
                 optimizer.zero_grad(set_to_none=True)
                 x, y, loss = None, None, None
                 self.cleanup()
-                self.__logger.error("error: max length is %d, exception is %s", max(len(s) for s in xx + yy), str(e))
+                self.__logger.error("Error: unexpected exception during training, exception: %s", str(e))
                 continue
         
         output_model_name = config["MODEL"]["output_model_name"]
-        model.save_pretrained(output_model_name)
-        tokenizer.save_pretrained(output_model_name)
+        try:
+            model.save_pretrained(output_model_name)
+            tokenizer.save_pretrained(output_model_name)
+        except Exception as e:
+            self.__logger.error("Error: saving model/tokenizer failed, exception: %s", str(e))
+            raise
 
     def finetune(self, model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, config: ConfigParser) -> None:
         if torch.cuda.is_available():
