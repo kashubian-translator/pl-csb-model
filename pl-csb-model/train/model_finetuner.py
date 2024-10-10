@@ -1,4 +1,5 @@
 import gc
+from logging import Logger
 import random
 import torch
 import pandas as pd
@@ -6,12 +7,11 @@ from tqdm.auto import trange
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 from transformers.optimization import Adafactor
 from transformers import get_constant_schedule_with_warmup
-from typing import Any
 
 from configparser import ConfigParser
 
 class ModelFinetuner:
-    __logger: Any
+    __logger: Logger
 
     def __init__(self, logger) -> None:
         self.__logger = logger
