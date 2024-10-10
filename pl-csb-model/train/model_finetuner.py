@@ -16,12 +16,12 @@ class ModelFinetuner:
     def __init__(self, logger) -> None:
         self.__logger = logger
 
-    def cleanup(self) -> None:
+    def __cleanup(self) -> None:
         """Try to free GPU memory"""
         gc.collect()
         torch.cuda.empty_cache()
 
-    def get_random_language_pairs(self, batch_size, langs, data):
+    def __get_random_language_pairs(self, batch_size, langs, data):
         try:
             (l1, long1), (l2, long2) = random.sample(langs, 2)
             xx, yy = [], []
@@ -37,7 +37,7 @@ class ModelFinetuner:
             self.__logger.error("Error: unexpected exception in get_random_language_pairs, exception: %s", str(e))
             raise
 
-    def train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataFrame, optimizer: Adafactor, config: ConfigParser) -> None:
+    def __train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataFrame, optimizer: Adafactor, config: ConfigParser) -> None:
         train_conf = config["TRAINING"]
 
         losses = []
@@ -45,13 +45,14 @@ class ModelFinetuner:
 
         LANGS = [("pl", "pol_Latn"), ("csb", "csb_Latn")]
 
+        self.__logger.info("Starting the training process")
         model.train()
         x, y, loss = None, None, None
-        self.cleanup()
+        self.__cleanup()
 
         tq = trange(len(losses), int(train_conf["training_steps"]))
         for _ in tq:
-            xx, yy, lang1, lang2 = self.get_random_language_pairs(int(train_conf["batch_size"]), LANGS, data)
+            xx, yy, lang1, lang2 = self.__get_random_language_pairs(int(train_conf["batch_size"]), LANGS, data)
             try:
                 tokenizer.src_lang = lang1
                 x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
@@ -70,7 +71,7 @@ class ModelFinetuner:
             except Exception as e:
                 optimizer.zero_grad(set_to_none=True)
                 x, y, loss = None, None, None
-                self.cleanup()
+                self.__cleanup()
                 self.__logger.error("Error: unexpected exception during training, exception: %s", str(e))
                 continue
         
@@ -95,5 +96,5 @@ class ModelFinetuner:
             weight_decay=1e-3,
         )
 
-        self.train(model, data, tokenizer, optimizer, config)
+        self.__train(model, data, tokenizer, optimizer, config)
     
