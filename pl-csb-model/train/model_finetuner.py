@@ -1,6 +1,7 @@
 import gc
 from logging import Logger
 import random
+
 import torch
 import pandas as pd
 from tqdm.auto import trange
@@ -38,6 +39,16 @@ class ModelFinetuner:
             raise
 
     def __train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataFrame, optimizer: Adafactor, config: ConfigParser) -> None:
+        self.__logger.info("=" * 40)
+        self.__logger.info("CONFIGURATION SETTINGS")
+        self.__logger.info("=" * 40)
+        for section in config.sections():
+            self.__logger.info(f"[{section}]")
+            for key, value in config.items(section):
+                self.__logger.info(f"{key}: {value}")
+            self.__logger.info("-" * 40)
+        self.__logger.info("=" * 40 + "\n")
+
         train_conf = config["TRAINING"]
 
         losses = []
@@ -85,16 +96,23 @@ class ModelFinetuner:
 
     def finetune(self, model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, config: ConfigParser) -> None:
         if torch.cuda.is_available():
+            self.__logger.info("CUDA is available. Using GPU for training")
             model.cuda()
+        else:
+            self.__logger.info("CUDA is not available. Using CPU for training")
         
-        optimizer = Adafactor(
-            [p for p in model.parameters() if p.requires_grad],
-            scale_parameter=False,
-            relative_step=False,
-            lr=1e-4,
-            clip_threshold=1.0,
-            weight_decay=1e-3,
-        )
+        try:
+            optimizer = Adafactor(
+                [p for p in model.parameters() if p.requires_grad],
+                scale_parameter=False,
+                relative_step=False,
+                lr=1e-4,
+                clip_threshold=1.0,
+                weight_decay=1e-3,
+            )
+        except Exception as e:
+            self.__logger.error(f"Error occurred while initializing Adafactor: {e}")
+            raise
 
         self.__train(model, data, tokenizer, optimizer, config)
     
