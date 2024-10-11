@@ -1,5 +1,5 @@
 import argparse
-from logging import Logger
+import sacrebleu
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
 import config_loader
@@ -10,13 +10,14 @@ from train.model_finetuner import ModelFinetuner
 import translate.translator as translator
 
 
-def train_model(config: dict, logger: Logger) -> None:
+def train_model(config: dict) -> None:
     pretrained_model_name = config["MODEL"]["pretrained_model_name"]
 
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(pretrained_model_name)
     tokenizer = NllbTokenizer.from_pretrained(pretrained_model_name, additional_special_tokens=["csb_Latn"])
     train_data = data_loader.load_data(config["DATA"]["training_data_file"])
 
+    logger = set_up_logger()
     ModelFinetuner(logger).finetune(pretrained_model, tokenizer, train_data, config)
     
 def use_model(config: dict) -> None:
@@ -49,13 +50,11 @@ if __name__ == "__main__":
     parser.add_argument("mode", choices=["train", "translate", "evaluate"], help="Mode to run the application with")
     
     args = parser.parse_args()
-
-    logger = set_up_logger(__name__)
     
     config = config_loader.load()
     
     if args.mode == "train":
-        train_model(config, logger)
+        train_model(config)
     elif args.mode == "translate":
         use_model(config)
     elif args.mode == "evaluate":
