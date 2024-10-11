@@ -1,6 +1,6 @@
 import gc
-from logging import Logger
 import random
+from logging import Logger  
 
 import torch
 import pandas as pd
@@ -38,7 +38,7 @@ class ModelFinetuner:
             self.__logger.error("Error: unexpected exception in get_random_language_pairs, exception: %s", str(e))
             raise
 
-    def __train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataFrame, optimizer: Adafactor, config: ConfigParser) -> None:
+    def __log_configuration(self, config: ConfigParser) -> None:
         self.__logger.info("=" * 40)
         self.__logger.info("CONFIGURATION SETTINGS")
         self.__logger.info("=" * 40)
@@ -48,6 +48,9 @@ class ModelFinetuner:
                 self.__logger.info(f"{key}: {value}")
             self.__logger.info("-" * 40)
         self.__logger.info("=" * 40 + "\n")
+
+    def __train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataFrame, optimizer: Adafactor, config: ConfigParser) -> None:
+        self.__log_configuration(config)
 
         train_conf = config["TRAINING"]
 
