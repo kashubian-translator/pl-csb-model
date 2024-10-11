@@ -1,6 +1,5 @@
 import argparse
 from logging import Logger
-
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
 import config_loader
