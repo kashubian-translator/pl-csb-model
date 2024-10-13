@@ -24,13 +24,13 @@ class ModelFinetuner:
 
     def __get_random_language_pairs(self, batch_size, langs, data):
         try:
-            (l1, long1), (l2, long2) = random.sample(langs, 2)
+            lang1, lang2 = random.sample(langs, 2)
             xx, yy = [], []
             for _ in range(batch_size):
                 item = data.iloc[random.randint(0, len(data)-1)]
-                xx.append(item[l1])
-                yy.append(item[l2])
-            return xx, yy, long1, long2
+                xx.append(item[lang1])
+                yy.append(item[lang2])
+            return xx, yy, lang1, lang2
         except KeyError as e:
             self.__logger.error("Error: language not found in data, exception: %s", str(e))
             raise
@@ -57,7 +57,7 @@ class ModelFinetuner:
         losses = []
         scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=int(train_conf["warmup_steps"]))
 
-        LANGS = [("pl", "pol_Latn"), ("csb", "csb_Latn")]
+        LANGS = ["pol_Latn", "csb_Latn"]
 
         self.__logger.info("Starting the training process")
         model.train()
