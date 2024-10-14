@@ -1,15 +1,15 @@
 import gc
 import random
-from logging import Logger  
+from logging import Logger
 
 import torch
 import pandas as pd
 from tqdm.auto import trange
-from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
+from transformers import NllbTokenizer, AutoModelForSeq2SeqLM, get_constant_schedule_with_warmup
 from transformers.optimization import Adafactor
-from transformers import get_constant_schedule_with_warmup
 
 from configparser import ConfigParser
+
 
 class ModelFinetuner:
     __logger: Logger
@@ -27,7 +27,7 @@ class ModelFinetuner:
             lang1, lang2 = random.sample(langs, 2)
             xx, yy = [], []
             for _ in range(batch_size):
-                item = data.iloc[random.randint(0, len(data)-1)]
+                item = data.iloc[random.randint(0, len(data) - 1)]
                 xx.append(item[lang1])
                 yy.append(item[lang2])
             return xx, yy, lang1, lang2
@@ -88,7 +88,7 @@ class ModelFinetuner:
                 self.__cleanup()
                 self.__logger.error("Error: unexpected exception during training, exception: %s", str(e))
                 continue
-        
+
         output_model_name = config["MODEL"]["output_model_name"]
         try:
             model.save_pretrained(output_model_name)
@@ -103,7 +103,7 @@ class ModelFinetuner:
             model.cuda()
         else:
             self.__logger.info("CUDA is not available. Using CPU for training")
-        
+
         try:
             optimizer = Adafactor(
                 [p for p in model.parameters() if p.requires_grad],
@@ -118,4 +118,3 @@ class ModelFinetuner:
             raise
 
         self.__train(model, data, tokenizer, optimizer, config)
-    

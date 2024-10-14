@@ -2,10 +2,11 @@ import re
 
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
+
 def normalize_translation(input: list[str]) -> str:
     # Technically matching against 'Latn' will break if we do languages other than PL and CSB but we won't
     match = re.match(r"^.*Latn (.*)<.*$", input[0])
-    # ! Workaround for when model spits out a translation that is too long and doesn't match regex. 
+    # ! Workaround for when model spits out a translation that is too long and doesn't match regex.
     # ! Pretend it never happened and return an empty string.
     # TODO: Add logging to notify us when that happens
     return match.group(1) if match != None else ""

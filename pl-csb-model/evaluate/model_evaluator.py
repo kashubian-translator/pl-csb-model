@@ -4,6 +4,7 @@ from transformers import AutoModelForSeq2SeqLM, NllbTokenizer
 
 import translate.translator as translator
 
+
 def evaluate(model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, sentences: pd.Series, references: pd.Series) -> sacrebleu.metrics.BLEUScore:
     source_lang = sentences.name
     target_lang = references.name
@@ -13,4 +14,3 @@ def evaluate(model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, sentences: 
 
     bleu = sacrebleu.corpus_bleu(translated_sentences.to_list(), references.map(lambda s: [s]).to_list())
     return bleu
-
