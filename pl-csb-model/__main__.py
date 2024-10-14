@@ -19,19 +19,21 @@ def train_model(config: dict, logger: Logger) -> None:
     train_data = data_loader.load_data(config["DATA"]["training_data_file"])
 
     ModelFinetuner(logger).finetune(pretrained_model, tokenizer, train_data, config)
-    
+
+
 def use_model(config: dict) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
 
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
-    message="Wsiądźmy do tego autobusu"
-    translated_message=translator.translate(message, pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn')
+    message = "Wsiądźmy do tego autobusu"
+    translated_message = translator.translate(message, pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn')
     print(f"Message {message} has been translated to: {translated_message}")
+
 
 def evaluate_model(config: dict) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
-    
+
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
     eval_data = data_loader.load_data(config["DATA"]["evaluation_data_file"])
@@ -45,20 +47,20 @@ def evaluate_model(config: dict) -> None:
     result = model_evaluator.evaluate(pretrained_model, tokenizer, sentences=target_language, references=source_language)
     print(f"BLEU Score ({target_language.name} -> {source_language.name}): {result.score}")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", choices=["train", "translate", "evaluate"], help="Mode to run the application with")
-    
+
     args = parser.parse_args()
 
     logger = set_up_logger(__name__)
-    
+
     config = config_loader.load()
-    
+
     if args.mode == "train":
         train_model(config, logger)
     elif args.mode == "translate":
         use_model(config)
     elif args.mode == "evaluate":
         evaluate_model(config)
-
