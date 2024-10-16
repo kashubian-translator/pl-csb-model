@@ -4,11 +4,11 @@ from logging import Logger
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
 import config_loader
-import evaluate.model_evaluator as model_evaluator
 import train.data_loader as data_loader
+from evaluate.model_evaluator import ModelEvaluator
 from train.logger import set_up_logger
 from train.model_finetuner import ModelFinetuner
-import translate.translator as translator
+from translate.translator import Translator
 
 
 def train_model(config: dict, logger: Logger) -> None:
@@ -21,17 +21,17 @@ def train_model(config: dict, logger: Logger) -> None:
     ModelFinetuner(logger).finetune(pretrained_model, tokenizer, train_data, config)
 
 
-def use_model(config: dict) -> None:
+def use_model(config: dict, logger: Logger) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
 
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
     message = "Wsiądźmy do tego autobusu"
-    translated_message = translator.translate(message, pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn')
+    translated_message = Translator(logger).translate(message, pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn')
     print(f"Message {message} has been translated to: {translated_message}")
 
 
-def evaluate_model(config: dict) -> None:
+def evaluate_model(config: dict, logger: Logger) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
 
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
@@ -41,10 +41,12 @@ def evaluate_model(config: dict) -> None:
     source_language = eval_data[eval_data.columns[0]]
     target_language = eval_data[eval_data.columns[1]]
 
-    result = model_evaluator.evaluate(pretrained_model, tokenizer, sentences=source_language, references=target_language)
+    evaluator = ModelEvaluator(logger)
+
+    result = evaluator.evaluate(pretrained_model, tokenizer, sentences=source_language, references=target_language)
     print(f"BLEU Score ({source_language.name} -> {target_language.name}): {result.score}")
 
-    result = model_evaluator.evaluate(pretrained_model, tokenizer, sentences=target_language, references=source_language)
+    result = evaluator.evaluate(pretrained_model, tokenizer, sentences=target_language, references=source_language)
     print(f"BLEU Score ({target_language.name} -> {source_language.name}): {result.score}")
 
 
@@ -61,6 +63,6 @@ if __name__ == "__main__":
     if args.mode == "train":
         train_model(config, logger)
     elif args.mode == "translate":
-        use_model(config)
+        use_model(config, logger)
     elif args.mode == "evaluate":
-        evaluate_model(config)
+        evaluate_model(config, logger)
