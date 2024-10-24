@@ -1,12 +1,42 @@
-# Setup
-`pip install -r requirements.txt`
+# Project Setup
+
+## Prerequisites
+It is recommended to create a Python virtual environment before proceeding. You can read more about how to set it up [here](https://docs.python.org/3/library/venv.html).
+
+## Installation
+1. **Install Dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+2. **Install Autopep8 Pre-commit Hook**:
+    ```bash
+    pre-commit install
+    ```
+
 # Model Creation
-`python pl-csb-model train`
+To train a new translation model, run the following command:
+```bash
+python model_utilities train
+```
+
+# Model Evaluation
+Once the model is trained, you can evaluate it by running:
+```bash
+python model_utilities evaluate
+```
+
 # Translation Using the Created Model
-`python pl-csb-model translate`
+To use the trained model for translation, execute the following command:
+```bash
+python model_utilities translate
+```
+
 # Configuration
+All key settings for the model, such as the pretrained model to be used, output model names, and training parameters, can be configured in the `config.ini` file.
 
-Pretrained model, output model name as well as training settings can be all configured inside `config.ini` file.
-
-## BatchSize
-Batchsize should in general correspond to the number of memory of the used training device, ie. BatchSize=8 for a 8GB RAM GPU card.
+## Batch Size Configuration
+The batch size setting in the `config.ini` file should match the memory capacity of the device being used for training. For example, if you are using a GPU with 8GB of memory, set:
+```ini
+BatchSize=8
+```
