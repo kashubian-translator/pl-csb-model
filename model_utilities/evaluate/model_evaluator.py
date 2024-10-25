@@ -25,9 +25,9 @@ class ModelEvaluator:
     def evaluate(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, sentences: pd.Series, references: pd.Series) -> sacrebleu.metrics.BLEUScore:
         source_lang = sentences.name
         target_lang = references.name
-        translator = Translator(self.__logger)
+        translator = Translator(self.__logger, model, tokenizer, source_lang, target_lang)
 
-        translated_sentences = sentences.map(lambda s: translator.translate(s, model, tokenizer, source_lang, target_lang))
+        translated_sentences = sentences.map(lambda s: translator.translate(s))
         translated_sentences = translated_sentences.map(lambda s: translator.normalize_translation(s))
 
         translated_sentences, references = self.__remove_corrupted_sentences(translated_sentences, references)
