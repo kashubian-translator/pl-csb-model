@@ -5,9 +5,9 @@ from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
 import config_loader
 import train.data_loader as data_loader
-from evaluate.model_evaluator import ModelEvaluator
+from evaluate.evaluator import ModelEvaluator
 from train.logger import set_up_logger
-from train.model_finetuner import ModelFinetuner
+from train.finetuner import ModelFinetuner
 from translate.translator import Translator
 
 
