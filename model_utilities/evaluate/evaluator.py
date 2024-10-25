@@ -6,6 +6,7 @@ from transformers import AutoModelForSeq2SeqLM, NllbTokenizer
 
 from translate.translator import Translator
 
+
 class ModelEvaluator:
     __logger: Logger
 
@@ -14,7 +15,7 @@ class ModelEvaluator:
 
     def __remove_corrupted_sentences(self, sentences: pd.Series, references: pd.Series) -> tuple[pd.Series, pd.Series]:
         df = pd.concat([sentences, references], axis=1).dropna()
-        valid_sentences, valid_references = df.iloc[:, 0], df.iloc[:, 1]  
+        valid_sentences, valid_references = df.iloc[:, 0], df.iloc[:, 1]
 
         removed_sentence_count = len(sentences) - len(valid_sentences)
         if (removed_sentence_count > 0):
