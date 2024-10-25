@@ -27,7 +27,7 @@ def use_model(config: dict, logger: Logger) -> None:
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
     message = "Wsiądźmy do tego autobusu"
-    translated_message = Translator(logger).translate(message, pretrained_model, tokenizer, 'pol_Latn', 'csb_Latn')
+    translated_message = Translator(logger, pretrained_model, tokenizer).translate(message)
     print(f"Message {message} has been translated to: {translated_message}")
 
 
