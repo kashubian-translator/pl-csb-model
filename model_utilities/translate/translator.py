@@ -3,6 +3,7 @@ from logging import Logger
 
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
+
 class Translator:
     __logger: Logger
     __model: AutoModelForSeq2SeqLM
@@ -14,7 +15,7 @@ class Translator:
     __b: int
 
     def __init__(self, logger: Logger, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer,
-                 src_lang = "pol_Latn", tgt_lang = "csb_Latn", max_input_length = 1024, num_beams = 4, a = 32, b = 3) -> None:
+                 src_lang="pol_Latn", tgt_lang="csb_Latn", max_input_length=1024, num_beams=4, a=32, b=3) -> None:
         self.__logger = logger
 
         self.__model = model
@@ -39,13 +40,12 @@ class Translator:
             return None
         return match.group(1)
 
-
     def translate(self, text: str, **kwargs) -> list[str]:
         inputs = self.__tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=self.__max_input_length)
         result = self.__model.generate(
             **inputs.to(self.__model.device),
-            forced_bos_token_id = self.__forced_bos_token_id,
-            max_new_tokens = int(self.__a + self.__b * inputs.input_ids.shape[1]),
-            num_beams = self.__num_beams, **kwargs
+            forced_bos_token_id=self.__forced_bos_token_id,
+            max_new_tokens=int(self.__a + self.__b * inputs.input_ids.shape[1]),
+            num_beams=self.__num_beams, **kwargs
         )
         return self.__tokenizer.batch_decode(result)
