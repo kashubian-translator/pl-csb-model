@@ -162,3 +162,4 @@ cython_debug/
 # custom
 .vscode
 pl-csb-model-v1/
+debug/
