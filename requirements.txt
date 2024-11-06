@@ -6,3 +6,4 @@ sentencepiece==0.2.0
 torch==2.2.2
 transformers==4.41.0
 pre-commit==3.8.0
+matplotlib==3.9.2

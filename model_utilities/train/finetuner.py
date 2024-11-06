@@ -1,7 +1,9 @@
 import gc
+import os
 import random
 from logging import Logger
 
+import matplotlib.pyplot as plt
 import torch
 import pandas as pd
 from tqdm.auto import trange
@@ -49,6 +51,12 @@ class ModelFinetuner:
             self.__logger.info("-" * 40)
         self.__logger.info("=" * 40 + "\n")
 
+    def __plot_losses(self, losses: list[float]) -> None:
+        plt.plot(losses)
+        plt.xlabel("Iteration")
+        plt.ylabel("Loss")
+        plt.savefig("./debug/graphs/losses.png")
+
     def __train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataFrame, optimizer: Adafactor, config: ConfigParser) -> None:
         self.__log_train_config(config)
 
@@ -88,6 +96,8 @@ class ModelFinetuner:
                 self.__cleanup()
                 self.__logger.error("Error: unexpected exception during training, exception: %s", str(e))
                 continue
+
+        self.__plot_losses(losses)
 
         output_model_name = config["MODEL"]["output_model_name"]
         try:
