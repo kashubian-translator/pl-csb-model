@@ -1,7 +1,7 @@
 import argparse
 from logging import Logger
 
-from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
+from transformers import NllbTokenizer, AutoModelForSeq2SeqLM, pipeline
 
 import config_loader
 import train.data_loader as data_loader
@@ -24,30 +24,42 @@ def train_model(config: dict, logger: Logger) -> None:
 def use_model(config: dict, logger: Logger) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
 
-    pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
+    # Default model commented out to make comparing results easy
+    # model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-600M")
+    # tokenizer = NllbTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
+
+    model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
     message = "Wsiądźmy do tego autobusu"
-    translated_message = Translator(logger, pretrained_model, tokenizer).translate(message)
+
+    translated_message = Translator(logger, model, tokenizer).translate(message, "pol_Latn", "csb_Latn")
+
     print(f"Message {message} has been translated to: {translated_message}")
 
 
 def evaluate_model(config: dict, logger: Logger) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
 
-    pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
     eval_data = data_loader.load_data(config["DATA"]["evaluation_data_file"])
 
     source_language = eval_data[eval_data.columns[0]]
     target_language = eval_data[eval_data.columns[1]]
 
-    evaluator = ModelEvaluator(logger)
+    evaluator = ModelEvaluator(logger, model, tokenizer)
 
-    result = evaluator.evaluate(pretrained_model, tokenizer, sentences=source_language, references=target_language)
+    result = evaluator.evaluate_bleu(sentences=source_language, references=target_language)
     print(f"BLEU Score ({source_language.name} -> {target_language.name}): {result.score}")
 
-    result = evaluator.evaluate(pretrained_model, tokenizer, sentences=target_language, references=source_language)
+    result = evaluator.evaluate_bleu(sentences=target_language, references=source_language)
     print(f"BLEU Score ({target_language.name} -> {source_language.name}): {result.score}")
+
+    result = evaluator.evaluate_chrf(sentences=source_language, references=target_language)
+    print(f"chrF++ Score ({source_language.name} -> {target_language.name}): {result.score}")
+
+    result = evaluator.evaluate_bleu(sentences=target_language, references=source_language)
+    print(f"chrF++ Score ({target_language.name} -> {source_language.name}): {result.score}")
 
 
 if __name__ == "__main__":
