@@ -24,10 +24,6 @@ def train_model(config: dict, logger: Logger) -> None:
 def use_model(config: dict, logger: Logger) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
 
-    # Default model commented out to make comparing results easy
-    # model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-600M")
-    # tokenizer = NllbTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
-
     model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
     message = "Wsiądźmy do tego autobusu"
@@ -44,22 +40,18 @@ def evaluate_model(config: dict, logger: Logger) -> None:
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
     eval_data = data_loader.load_data(config["DATA"]["evaluation_data_file"])
 
-    source_language = eval_data[eval_data.columns[0]]
-    target_language = eval_data[eval_data.columns[1]]
+    source_data = eval_data[eval_data.columns[0]]
+    target_data = eval_data[eval_data.columns[1]]
 
     evaluator = ModelEvaluator(logger, model, tokenizer)
 
-    result = evaluator.evaluate_bleu(sentences=source_language, references=target_language)
-    print(f"BLEU Score ({source_language.name} -> {target_language.name}): {result.score}")
+    bleu, chrfpp = evaluator.evaluate(sentences=source_data, references=target_data)
+    logger.info(f"BLEU Score ({source_data.name} -> {target_data.name}): {bleu.score}")
+    logger.info(f"chrF++ Score ({source_data.name} -> {target_data.name}): {chrfpp.score}")
 
-    result = evaluator.evaluate_bleu(sentences=target_language, references=source_language)
-    print(f"BLEU Score ({target_language.name} -> {source_language.name}): {result.score}")
-
-    result = evaluator.evaluate_chrf(sentences=source_language, references=target_language)
-    print(f"chrF++ Score ({source_language.name} -> {target_language.name}): {result.score}")
-
-    result = evaluator.evaluate_bleu(sentences=target_language, references=source_language)
-    print(f"chrF++ Score ({target_language.name} -> {source_language.name}): {result.score}")
+    bleu, chrfpp = evaluator.evaluate(sentences=target_data, references=source_data)
+    logger.info(f"BLEU Score ({target_data.name} -> {source_data.name}): {bleu.score}")
+    logger.info(f"chrF++ Score ({target_data.name} -> {source_data.name}): {chrfpp.score}")
 
 
 if __name__ == "__main__":
