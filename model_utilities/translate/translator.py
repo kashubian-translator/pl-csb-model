@@ -18,10 +18,13 @@ class Translator:
         self.__tokenizer = tokenizer
         self.__max_length = max_length
 
-        self.__pipeline = pipeline("translation",
+        self.__pipeline = pipeline(task="translation",
                                    model=self.__model,
                                    tokenizer=self.__tokenizer,
                                    max_length=self.__max_length)
 
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        return self.__pipeline(text, src_lang=source_lang, tgt_lang=target_lang)[0]["translation_text"]
+        model_output = self.__pipeline(text, src_lang=source_lang, tgt_lang=target_lang)
+        translation_text = model_output[0]["translation_text"]
+        self.__logger.info(f"Translation from {source_lang} to {target_lang}: {translation_text}")
+        return translation_text
