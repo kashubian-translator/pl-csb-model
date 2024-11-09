@@ -21,16 +21,19 @@ def train_model(config: dict, logger: Logger) -> None:
     ModelFinetuner(logger).finetune(pretrained_model, tokenizer, train_data, config)
 
 
-def use_model(config: dict, logger: Logger) -> None:
+def translate_with_model(config: dict, logger: Logger, text: str, reverse: bool) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
 
     model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizer.from_pretrained(output_model_name)
-    message = "Wsiądźmy do tego autobusu"
 
-    translated_message = Translator(logger, model, tokenizer).translate(message, "pol_Latn", "csb_Latn")
+    source_lang = "pol_Latn"
+    target_lang = "csb_Latn"
 
-    print(f"Message {message} has been translated to: {translated_message}")
+    if reverse:
+        source_lang, target_lang = target_lang, source_lang
+
+    Translator(logger, model, tokenizer).translate(text, source_lang, target_lang)
 
 
 def evaluate_model(config: dict, logger: Logger) -> None:
@@ -56,7 +59,9 @@ def evaluate_model(config: dict, logger: Logger) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("-r", "--reverse", help="Reverse translation direction", action="store_true")
     parser.add_argument("mode", choices=["train", "translate", "evaluate"], help="Mode to run the application with")
+    parser.add_argument("text", type=str, nargs="?", default="Wsiądźmy do tego autobusu", help="Text to translate")
 
     args = parser.parse_args()
 
@@ -64,9 +69,10 @@ if __name__ == "__main__":
 
     config = config_loader.load()
 
-    if args.mode == "train":
-        train_model(config, logger)
-    elif args.mode == "translate":
-        use_model(config, logger)
-    elif args.mode == "evaluate":
-        evaluate_model(config, logger)
+    match args.mode:
+        case "train":
+            train_model(config, logger)
+        case "translate":
+            translate_with_model(config, logger, args.text, args.reverse)
+        case "evaluate":
+            evaluate_model(config, logger)
