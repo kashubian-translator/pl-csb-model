@@ -3,11 +3,11 @@ from typing import Optional
 
 
 map_level = {
-    "DEBUG": logging.DEBUG,
-    "INFO": logging.INFO,
-    "WARNING": logging.WARNING,
+    "CRITICAL": logging.CRITICAL,
     "ERROR": logging.ERROR,
-    "CRITICAL": logging.CRITICAL
+    "WARNING": logging.WARNING,
+    "INFO": logging.INFO,
+    "DEBUG": logging.DEBUG
 }
 
 DEFAULT_LOGGER_LEVEL = logging.INFO

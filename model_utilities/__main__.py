@@ -1,12 +1,12 @@
 import argparse
 from logging import Logger
 
-from transformers import NllbTokenizer, AutoModelForSeq2SeqLM, pipeline
+from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
 
-import config_loader
-import train.data_loader as data_loader
 from evaluate.evaluator import ModelEvaluator
-from train.logger import set_up_logger
+import shared.config_loader as config_loader
+from shared.logger import set_up_logger
+import train.data_loader as data_loader
 from train.finetuner import ModelFinetuner
 from translate.translator import Translator
 
@@ -33,7 +33,8 @@ def translate_with_model(config: dict, logger: Logger, text: str, reverse: bool)
     if reverse:
         source_lang, target_lang = target_lang, source_lang
 
-    Translator(logger, model, tokenizer).translate(text, source_lang, target_lang)
+    translation_text = Translator(logger, model, tokenizer).translate(text, source_lang, target_lang)
+    logger.info(f"Translation: '{text}' ({source_lang}) → '{translation_text}' ({target_lang})")
 
 
 def evaluate_model(config: dict, logger: Logger) -> None:

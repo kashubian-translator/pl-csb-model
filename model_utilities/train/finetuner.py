@@ -66,7 +66,7 @@ class ModelFinetuner:
 
         LANGS = ["pol_Latn", "csb_Latn"]
 
-        self.__logger.info("Starting the training process")
+        self.__logger.debug("Starting the training process")
         model.train()
         x, y, loss = None, None, None
         self.__cleanup()
