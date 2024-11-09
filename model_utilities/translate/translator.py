@@ -26,5 +26,5 @@ class Translator:
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
         model_output = self.__pipeline(text, src_lang=source_lang, tgt_lang=target_lang)
         translation_text = model_output[0]["translation_text"]
-        self.__logger.info(f"Translation from {source_lang} to {target_lang}: {translation_text}")
+        self.__logger.info(f"Translation: '{text}' ({source_lang}) → '{translation_text}' ({target_lang})")
         return translation_text
