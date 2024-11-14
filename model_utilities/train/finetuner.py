@@ -24,22 +24,6 @@ class ModelFinetuner:
         gc.collect()
         torch.cuda.empty_cache()
 
-    def __get_random_language_pairs(self, batch_size, langs, data):
-        try:
-            lang1, lang2 = random.sample(langs, 2)
-            xx, yy = [], []
-            for _ in range(batch_size):
-                item = data.iloc[random.randint(0, len(data) - 1)]
-                xx.append(item[lang1])
-                yy.append(item[lang2])
-            return xx, yy, lang1, lang2
-        except KeyError as e:
-            self.__logger.error("Error: language not found in data, exception: %s", str(e))
-            raise
-        except Exception as e:
-            self.__logger.error("Error: unexpected exception in get_random_language_pairs, exception: %s", str(e))
-            raise
-
     def __log_train_config(self, config: ConfigParser) -> None:
         self.__logger.info("=" * 40)
         self.__logger.info("CONFIGURATION SETTINGS")
@@ -72,35 +56,43 @@ class ModelFinetuner:
         x, y, loss = None, None, None
         self.__cleanup()
 
-        progress_bar = trange(int(train_conf["training_steps"]))
-        for i in progress_bar:
-            batch = batched_dataset[i]
-            # Swap the direction of translation for some batches
-            batch = list(batch.items())
-            random.shuffle(batch)
+        num_epochs = int(train_conf["num_epochs"])
+        num_training_steps = len(batched_dataset)
 
-            (lang1, xx), (lang2, yy) = batch
-            try:
-                tokenizer.src_lang = lang1
-                x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
-                tokenizer.src_lang = lang2
-                y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
-                y.input_ids[y.input_ids == tokenizer.pad_token_id] = -100
+        self.__logger.debug(f"Training steps per epoch: {num_training_steps}")
 
-                loss = model(**x, labels=y.input_ids).loss
-                loss.backward()
-                losses.append(loss.item())
+        progress_bar = trange(num_epochs * num_training_steps)
+        for _ in range(num_epochs):
+            for i in range(num_training_steps):
+                batch = batched_dataset[i]
+                # Swap the direction of translation for some batches
+                batch = list(batch.items())
+                random.shuffle(batch)
 
-                optimizer.step()
-                optimizer.zero_grad(set_to_none=True)
-                scheduler.step()
+                (lang1, xx), (lang2, yy) = batch
+                try:
+                    tokenizer.src_lang = lang1
+                    x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
+                    tokenizer.src_lang = lang2
+                    y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
+                    y.input_ids[y.input_ids == tokenizer.pad_token_id] = -100
 
-            except Exception as e:
-                optimizer.zero_grad(set_to_none=True)
-                x, y, loss = None, None, None
-                self.__cleanup()
-                self.__logger.error("Error: unexpected exception during training, exception: %s", str(e))
-                continue
+                    loss = model(**x, labels=y.input_ids).loss
+                    loss.backward()
+                    losses.append(loss.item())
+
+                    optimizer.step()
+                    optimizer.zero_grad(set_to_none=True)
+                    scheduler.step()
+
+                except Exception as e:
+                    optimizer.zero_grad(set_to_none=True)
+                    x, y, loss = None, None, None
+                    self.__cleanup()
+                    self.__logger.error("Error: unexpected exception during training, exception: %s", str(e))
+                    continue
+
+                progress_bar.update()
 
         self.__plot_losses(losses)
 
