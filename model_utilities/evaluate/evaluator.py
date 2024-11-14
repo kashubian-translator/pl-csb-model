@@ -18,10 +18,9 @@ class ModelEvaluator:
         source_lang = sentences.name
         target_lang = references.name
 
-        translated_sentences: pd.Series = sentences.map(lambda s: self.__translator.translate(s, source_lang, target_lang))
+        translated_sentences_list = self.__translator.translate(sentences.to_list(), source_lang, target_lang)
 
         # There can be multiple references per sentence so we need to pass a one element list
-        translated_sentences_list = translated_sentences.to_list()
         references_list = references.map(lambda s: [s]).to_list()
 
         bleu = sacrebleu.corpus_bleu(translated_sentences_list, references_list)

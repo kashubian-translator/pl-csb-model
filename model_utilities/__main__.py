@@ -37,7 +37,7 @@ def translate_with_model(config: dict, logger: Logger, text: str, reverse: bool)
     if reverse:
         source_lang, target_lang = target_lang, source_lang
 
-    translation_text = Translator(logger, model, tokenizer).translate(text, source_lang, target_lang)
+    translation_text = Translator(logger, model, tokenizer).translate([text], source_lang, target_lang)[0]
     logger.info(f"Translation: '{text}' ({source_lang}) → '{translation_text}' ({target_lang})")
 
 
