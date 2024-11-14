@@ -5,6 +5,7 @@ from logging import Logger
 import matplotlib.pyplot as plt
 import torch
 import pandas as pd
+import datasets as ds
 from tqdm.auto import trange
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM, get_constant_schedule_with_warmup
 from transformers.optimization import Adafactor
@@ -23,22 +24,6 @@ class ModelFinetuner:
         gc.collect()
         torch.cuda.empty_cache()
 
-    def __get_random_language_pairs(self, batch_size, langs, data):
-        try:
-            lang1, lang2 = random.sample(langs, 2)
-            xx, yy = [], []
-            for _ in range(batch_size):
-                item = data.iloc[random.randint(0, len(data) - 1)]
-                xx.append(item[lang1])
-                yy.append(item[lang2])
-            return xx, yy, lang1, lang2
-        except KeyError as e:
-            self.__logger.error("Error: language not found in data, exception: %s", str(e))
-            raise
-        except Exception as e:
-            self.__logger.error("Error: unexpected exception in get_random_language_pairs, exception: %s", str(e))
-            raise
-
     def __log_train_config(self, config: ConfigParser) -> None:
         self.__logger.info("=" * 40)
         self.__logger.info("CONFIGURATION SETTINGS")
@@ -56,7 +41,7 @@ class ModelFinetuner:
         plt.ylabel("Loss")
         plt.savefig("./debug/graphs/losses.png")
 
-    def __train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, data: pd.DataFrame, optimizer: Adafactor, config: ConfigParser) -> None:
+    def __train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, dataset: ds.Dataset, optimizer: Adafactor, config: ConfigParser) -> None:
         self.__log_train_config(config)
 
         train_conf = config["TRAINING"]
@@ -64,37 +49,50 @@ class ModelFinetuner:
         losses = []
         scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=int(train_conf["warmup_steps"]))
 
-        LANGS = ["pol_Latn", "csb_Latn"]
+        batched_dataset = dataset["train"].batch(batch_size=int(train_conf["batch_size"]))
 
         self.__logger.debug("Starting the training process")
         model.train()
         x, y, loss = None, None, None
         self.__cleanup()
 
-        tq = trange(len(losses), int(train_conf["training_steps"]))
-        for _ in tq:
-            xx, yy, lang1, lang2 = self.__get_random_language_pairs(int(train_conf["batch_size"]), LANGS, data)
-            try:
-                tokenizer.src_lang = lang1
-                x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
-                tokenizer.src_lang = lang2
-                y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
-                y.input_ids[y.input_ids == tokenizer.pad_token_id] = -100
+        num_epochs = int(train_conf["num_epochs"])
+        num_training_steps = len(batched_dataset)
 
-                loss = model(**x, labels=y.input_ids).loss
-                loss.backward()
-                losses.append(loss.item())
+        self.__logger.debug(f"Training steps per epoch: {num_training_steps}")
 
-                optimizer.step()
-                optimizer.zero_grad(set_to_none=True)
-                scheduler.step()
+        progress_bar = trange(num_epochs * num_training_steps)
+        for _ in range(num_epochs):
+            for i in range(num_training_steps):
+                batch = batched_dataset[i]
+                # Swap the direction of translation for some batches
+                batch = list(batch.items())
+                random.shuffle(batch)
 
-            except Exception as e:
-                optimizer.zero_grad(set_to_none=True)
-                x, y, loss = None, None, None
-                self.__cleanup()
-                self.__logger.error("Error: unexpected exception during training, exception: %s", str(e))
-                continue
+                (lang1, xx), (lang2, yy) = batch
+                try:
+                    tokenizer.src_lang = lang1
+                    x = tokenizer(xx, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
+                    tokenizer.src_lang = lang2
+                    y = tokenizer(yy, return_tensors='pt', padding=True, truncation=True, max_length=int(train_conf["max_length"])).to(model.device)
+                    y.input_ids[y.input_ids == tokenizer.pad_token_id] = -100
+
+                    loss = model(**x, labels=y.input_ids).loss
+                    loss.backward()
+                    losses.append(loss.item())
+
+                    optimizer.step()
+                    optimizer.zero_grad(set_to_none=True)
+                    scheduler.step()
+
+                except Exception as e:
+                    optimizer.zero_grad(set_to_none=True)
+                    x, y, loss = None, None, None
+                    self.__cleanup()
+                    self.__logger.error("Error: unexpected exception during training, exception: %s", str(e))
+                    continue
+
+                progress_bar.update()
 
         self.__plot_losses(losses)
 
@@ -106,7 +104,7 @@ class ModelFinetuner:
             self.__logger.error("Error: saving model/tokenizer failed, exception: %s", str(e))
             raise
 
-    def finetune(self, model: AutoModelForSeq2SeqLM, data: pd.DataFrame, tokenizer: NllbTokenizer, config: ConfigParser) -> None:
+    def finetune(self, model: AutoModelForSeq2SeqLM, dataset: ds.Dataset, tokenizer: NllbTokenizer, config: ConfigParser) -> None:
         if torch.cuda.is_available():
             self.__logger.info("CUDA is available. Using GPU for training")
             model.cuda()
@@ -126,4 +124,4 @@ class ModelFinetuner:
             self.__logger.error(f"Error occurred while initializing Adafactor: {e}")
             raise
 
-        self.__train(model, data, tokenizer, optimizer, config)
+        self.__train(model, dataset, tokenizer, optimizer, config)
