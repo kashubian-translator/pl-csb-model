@@ -23,8 +23,13 @@ class Translator:
                                    tokenizer=self.__tokenizer,
                                    max_length=self.__max_length)
 
-    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        model_output = self.__pipeline(text, src_lang=source_lang, tgt_lang=target_lang)
-        translation_text = model_output[0]["translation_text"]
-        self.__logger.debug(f"Translation: '{text}' ({source_lang}) → '{translation_text}' ({target_lang})")
-        return translation_text
+    def translate(self, text_list: list[str], source_lang: str, target_lang: str) -> list[str]:
+        model_output = self.__pipeline(text_list, src_lang=source_lang, tgt_lang=target_lang)
+
+        translation_text_list = []
+        for i, text in enumerate(text_list):
+            translation_text = model_output[i]["translation_text"]
+            translation_text_list.append(translation_text)
+            self.__logger.debug(f"Translation: '{text}' ({source_lang}) → '{translation_text}' ({target_lang})")
+
+        return translation_text_list

@@ -10,7 +10,7 @@ map_level = {
     "DEBUG": logging.DEBUG
 }
 
-DEFAULT_LOGGER_LEVEL = logging.INFO
+DEFAULT_LOGGER_LEVEL = logging.DEBUG
 
 
 def set_up_logger(name: str, logger_level: Optional[str] = None) -> logging.Logger:
