@@ -54,12 +54,14 @@ def evaluate_model(config: dict, logger: Logger) -> None:
     evaluator = ModelEvaluator(logger, model, tokenizer)
 
     bleu, chrfpp = evaluator.evaluate(sentences=source_data, references=target_data)
-    logger.info(f"BLEU Score ({source_data.name} -> {target_data.name}): {bleu.score}")
-    logger.info(f"chrF++ Score ({source_data.name} -> {target_data.name}): {chrfpp.score}")
+    logger.info(f"Results ({source_data.name} → {target_data.name}):")
+    logger.info(bleu)
+    logger.info(chrfpp)
 
     bleu, chrfpp = evaluator.evaluate(sentences=target_data, references=source_data)
-    logger.info(f"BLEU Score ({target_data.name} -> {source_data.name}): {bleu.score}")
-    logger.info(f"chrF++ Score ({target_data.name} -> {source_data.name}): {chrfpp.score}")
+    logger.info(f"Results ({target_data.name} → {source_data.name}):")
+    logger.info(bleu)
+    logger.info(chrfpp)
 
 
 if __name__ == "__main__":
