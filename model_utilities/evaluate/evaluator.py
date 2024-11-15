@@ -21,7 +21,7 @@ class ModelEvaluator:
         translated_sentences_list = self.__translator.translate(sentences.to_list(), source_lang, target_lang)
 
         # There can be multiple references per sentence so we need to pass a one element list
-        references_list = references.map(lambda s: [s]).to_list()
+        references_list = [references.to_list()]
 
         bleu = sacrebleu.corpus_bleu(translated_sentences_list, references_list)
         chrfpp = sacrebleu.corpus_chrf(translated_sentences_list, references_list, word_order=2)
