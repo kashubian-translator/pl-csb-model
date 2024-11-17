@@ -16,13 +16,13 @@ def train_model(config: dict, logger: Logger) -> None:
 
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(pretrained_model_name)
     tokenizer = NllbTokenizer.from_pretrained(pretrained_model_name, additional_special_tokens=["csb_Latn"])
-    train_data = data_loader.load_dataset(
+    dataset = data_loader.load_dataset(
         config["DATA"]["training_data_file"],
         config["DATA"]["validation_data_file"],
         config["DATA"]["test_data_file"]
     )
 
-    ModelFinetuner(logger).finetune(pretrained_model, tokenizer, train_data, config)
+    ModelFinetuner(logger).finetune(pretrained_model, tokenizer, dataset, config)
 
 
 def translate_with_model(config: dict, logger: Logger, text: str, reverse: bool) -> None:
