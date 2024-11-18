@@ -46,10 +46,10 @@ def evaluate_model(config: dict, logger: Logger) -> None:
 
     model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
     tokenizer = NllbTokenizerFast.from_pretrained(output_model_name)
-    eval_data = data_loader.load_data(config["DATA"]["evaluation_data_file"])
+    validation_data = data_loader.load_data(config["DATA"]["validation_data_file"])
 
-    source_data = eval_data[eval_data.columns[0]]
-    target_data = eval_data[eval_data.columns[1]]
+    source_data = validation_data[validation_data.columns[0]]
+    target_data = validation_data[validation_data.columns[1]]
 
     evaluator = ModelEvaluator(logger, model, tokenizer)
 
