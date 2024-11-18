@@ -29,8 +29,20 @@ python model_utilities evaluate
 # Translation Using the Created Model
 To use the trained model for translation, execute the following command:
 ```bash
+python model_utilities translate <text to translate>
+```
+
+The model will translate from Polish to Kashubian by default. To translate in reverse, call:
+```bash
+python model_utilities translate <text to translate> true
+```
+
+For debug purposes, you can simply call:
+```bash
 python model_utilities translate
 ```
+
+This will translate "Wsiądźmy do tego autobusu" from Polish to Kashubian.
 
 # Configuration
 All key settings for the model, such as the pretrained model to be used, output model names, and training parameters, can be configured in the `config.ini` file.
