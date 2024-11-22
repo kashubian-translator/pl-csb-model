@@ -1,7 +1,7 @@
 import argparse
 from logging import Logger
 
-from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
+from transformers import NllbTokenizerFast, AutoModelForSeq2SeqLM
 
 from evaluate.evaluator import ModelEvaluator
 import shared.config_loader as config_loader
@@ -15,7 +15,7 @@ def train_model(config: dict, logger: Logger) -> None:
     pretrained_model_name = config["MODEL"]["pretrained_model_name"]
 
     pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(pretrained_model_name)
-    tokenizer = NllbTokenizer.from_pretrained(pretrained_model_name, additional_special_tokens=["csb_Latn"])
+    tokenizer = NllbTokenizerFast.from_pretrained(pretrained_model_name, additional_special_tokens=["csb_Latn"])
     dataset = data_loader.load_dataset(
         config["DATA"]["training_data_file"],
         config["DATA"]["validation_data_file"],
@@ -29,7 +29,7 @@ def translate_with_model(config: dict, logger: Logger, text: str, reverse: bool)
     output_model_name = config["MODEL"]["output_model_name"]
 
     model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
-    tokenizer = NllbTokenizer.from_pretrained(output_model_name)
+    tokenizer = NllbTokenizerFast.from_pretrained(output_model_name)
 
     source_lang = "pol_Latn"
     target_lang = "csb_Latn"
@@ -45,7 +45,7 @@ def evaluate_model(config: dict, logger: Logger) -> None:
     output_model_name = config["MODEL"]["output_model_name"]
 
     model = AutoModelForSeq2SeqLM.from_pretrained(output_model_name)
-    tokenizer = NllbTokenizer.from_pretrained(output_model_name)
+    tokenizer = NllbTokenizerFast.from_pretrained(output_model_name)
     eval_data = data_loader.load_data(config["DATA"]["evaluation_data_file"])
 
     source_data = eval_data[eval_data.columns[0]]
