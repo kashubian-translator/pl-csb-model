@@ -113,8 +113,6 @@ class ModelFinetuner:
         tokenized_train_dataset = self.__tokenize_dataset(dataset["train"], tokenizer, max_length=max_length)
         tokenized_validation_dataset = self.__tokenize_dataset(dataset["validation"], tokenizer, max_length=max_length)
 
-        print(tokenized_train_dataset[:5])
-
         data_collator = DataCollatorForSeq2Seq(tokenizer, max_length=batch_size)
 
         train_dataloader = DataLoader(tokenized_train_dataset, batch_size=batch_size, collate_fn=data_collator)
