@@ -1,16 +1,18 @@
 import gc
 import random
+from configparser import ConfigParser
 from logging import Logger
 
+import datasets as ds
 import matplotlib.pyplot as plt
 import torch
-import pandas as pd
-import datasets as ds
+from distutils.util import strtobool
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LambdaLR
 from tqdm.auto import trange
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM, get_constant_schedule_with_warmup
-from transformers.optimization import Adafactor
 
-from configparser import ConfigParser
+from shared.optimizer_utils import get_optimizer_class
 
 
 class ModelFinetuner:
@@ -40,18 +42,18 @@ class ModelFinetuner:
         plt.plot(validation_losses, label="Validation Loss")
         plt.xlabel("Iteration")
         plt.ylabel("Loss")
+        plt.title("Training and validation losses")
         plt.legend()
         plt.savefig("./debug/graphs/losses.png")
 
-    def __train(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, dataset: ds.Dataset, optimizer: Adafactor,
-                config: ConfigParser) -> None:
+    def __train_and_return_losses(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, dataset: ds.Dataset,
+                                  optimizer: Optimizer, scheduler: LambdaLR, config: ConfigParser) -> tuple[list[float], list[float]]:
         self.__log_train_config(config)
 
         train_conf = config["TRAINING"]
 
         training_losses = []
         validation_losses = []
-        scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=int(train_conf["warmup_steps"]))
 
         train_batches = dataset["train"].batch(batch_size=int(train_conf["batch_size"]))
         val_batches = dataset["validation"].batch(batch_size=int(train_conf["batch_size"]))
@@ -147,26 +149,52 @@ class ModelFinetuner:
                                f"Loss: {avg_validation_loss:.4f}")
 
         self.__plot_losses(training_losses, validation_losses)
+        return training_losses, validation_losses
 
-    def finetune(self, model: AutoModelForSeq2SeqLM, dataset: ds.Dataset, tokenizer: NllbTokenizer,
-                 config: ConfigParser) -> None:
+    def finetune(self, model: AutoModelForSeq2SeqLM, tokenizer: NllbTokenizer, dataset: ds.Dataset,
+                 config: ConfigParser, optimizer=None) -> None:
         if torch.cuda.is_available():
             self.__logger.info("CUDA is available. Using GPU for training")
             model.cuda()
         else:
             self.__logger.info("CUDA is not available. Using CPU for training")
 
-        try:
-            optimizer = Adafactor(
-                [p for p in model.parameters() if p.requires_grad],
-                scale_parameter=False,
-                relative_step=False,
-                lr=1e-4,
-                clip_threshold=1.0,
-                weight_decay=1e-3,
-            )
-        except Exception as e:
-            self.__logger.error(f"Error occurred while initializing Adafactor: {e}")
-            raise
+        if not optimizer:
+            optimizer = self.__initialize_optimizer(model, config)
+        scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=int(config["TRAINING"]["warmup_steps"]))
 
-        self.__train(model, dataset, tokenizer, optimizer, config)
+        self.__train_and_return_losses(model, tokenizer, dataset, optimizer, scheduler, config)
+
+    def __initialize_optimizer(self, model: AutoModelForSeq2SeqLM, config: ConfigParser):
+        try:
+            optimizer_name = config["TRAINING"]["optimizer_class_name"]
+            optimizer_class = get_optimizer_class(optimizer_name)
+            learning_rate = float(config["TRAINING"]["optimizer_learning_rate"])
+            relative_step = strtobool(config["TRAINING"]["optimizer_relative_step"])
+            clip_threshold = float(config["TRAINING"]["optimizer_clip_threshold"])
+            decay_rate = float(config["TRAINING"]["optimizer_decay_rate"])
+            weight_decay = float(config["TRAINING"]["optimizer_weight_decay"])
+            scale_parameter = strtobool(config["TRAINING"]["optimizer_scale_parameter"])
+
+            self.__logger.debug("Initializing optimizer with the following parameters:")
+            self.__logger.debug(f"Optimizer class: {optimizer_name}")
+            self.__logger.debug(f"Learning rate: {learning_rate}")
+            self.__logger.debug(f"Clip threshold: {clip_threshold}")
+            self.__logger.debug(f"Decay rate: {decay_rate}")
+            self.__logger.debug(f"Weight decay: {weight_decay}")
+            self.__logger.debug(f"Scale parameter: {scale_parameter}")
+            self.__logger.debug(f"Relative step: {relative_step}")
+
+            optimizer_params = {
+                "lr": learning_rate,
+                "clip_threshold": clip_threshold,
+                "weight_decay": weight_decay,
+                "scale_parameter": scale_parameter,
+                "relative_step": relative_step
+            }
+
+            optimizer = optimizer_class([p for p in model.parameters() if p.requires_grad], **optimizer_params)
+        except Exception as e:
+            self.__logger.error(f"Error occurred while initializing optimizer: {e}")
+            raise
+        return optimizer
